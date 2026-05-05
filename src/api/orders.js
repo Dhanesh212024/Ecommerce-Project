@@ -18,6 +18,24 @@ export const createOrder = async (data) => {
   }
 };
 
+export const getMyOrders = async (userId) => {
+  try {
+    const response = await axiosInstance.get(`/orders?userId=${userId}`);
+    return{
+      success: true,
+      data: response.data,
+    };
+  }
+  catch (error){
+    console.error("Get My orders API Error:", error);
+    
+    return {
+      success: false,
+      data: "Unabale to load errors"
+    }
+  }
+}
+
 export const getOrderById = async (id) => {
   try {
     const response = await axiosInstance.get(`/orders/${id}`);

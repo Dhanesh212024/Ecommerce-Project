@@ -1,20 +1,10 @@
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Box,
-  Avatar,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
-} from "@mui/material";
+import { AppBar, Toolbar, Typography, Button, Box, Avatar, Menu, MenuItem, ListItemIcon, ListItemText, } from "@mui/material";
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import { AuthContext } from "../usercontext/context/authContext";
 
 export default function Header() {
@@ -41,6 +31,11 @@ export default function Header() {
   const goToProfile = () => {
     handleMenuClose();
     navigate("/profile");
+  };
+
+  const goToMyOrder = () => {
+    handleMenuClose();
+    navigate("/myorders");
   };
 
   const handleLogout = () => {
@@ -101,6 +96,13 @@ export default function Header() {
                     <PersonIcon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText>Profile</ListItemText>
+                </MenuItem>
+
+                <MenuItem onClick={goToMyOrder} >
+                  <ListItemIcon>
+                    <ReceiptLongIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>My Orders</ListItemText>
                 </MenuItem>
 
                 <MenuItem onClick={handleLogout}>

@@ -6,6 +6,7 @@ import Order from "../products/orderProducts";
 import CheckOut from "../products/checkoutProducts";
 import Header from "../component/header";
 import UserProfile from "../usercontext/userProfile";
+import MyOrders from "../products/myOrders";
 
 const Router = () => {
   return (
@@ -37,6 +38,14 @@ const Router = () => {
             element={
               <AuthGuard>
                 <CheckOut />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/myorders"
+            element={
+              <AuthGuard>
+                <MyOrders />
               </AuthGuard>
             }
           />
