@@ -1,75 +1,26 @@
-import { useParams, useNavigate } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  Button,
-  Paper,
-  Divider,
-  TextField,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-} from "@mui/material";
-import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
+import { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Box, Typography, Button, Paper, Divider, TextField, Table, TableBody, TableCell, TableHead, TableRow, } from "@mui/material"; 
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AddIcon from "@mui/icons-material/Add";
 import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
-import { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "../usercontext/context/authContext";
-import { ProductContext } from "../productcontext/productContext";
 import { createOrder } from "../api/orders";
 
-export default function OrderPage() {
-  const { id } = useParams();
+export default function CartProducts() {
   const navigate = useNavigate();
-
   const { user } = useContext(AuthContext);
-  const { products, loading } = useContext(ProductContext);
 
-  const [orderItems, setOrderItems] = useState([]);
+  const [cartItems, setCartItems] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
   const storageKey = user ? `orderItems_${user.id}` : "orderItems_guest";
 
-  const selectedProduct = useMemo(() => {
-    return products.find((p) => String(p.id) === String(id));
-  }, [products, id]);
-
   useEffect(() => {
-    if (loading || !selectedProduct) return;
-
     const savedItems = JSON.parse(localStorage.getItem(storageKey)) || [];
-
-    const alreadyAdded = savedItems.some(
-      (item) => String(item.product.id) === String(selectedProduct.id)
-    );
-
-    let updatedItems = savedItems;
-
-    if (!alreadyAdded) {
-      updatedItems = [
-        ...savedItems,
-        {
-          product: selectedProduct,
-          quantity: 1,
-        },
-      ];
-    }
-
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setOrderItems(updatedItems);
-    localStorage.setItem(storageKey, JSON.stringify(updatedItems));
-  }, [loading, selectedProduct, storageKey]);
-
-  if (loading) {
-    return <Typography>Loading...</Typography>;
-  }
-
-  if (!selectedProduct) {
-    return <Typography>Product not found</Typography>;
-  }
+    setCartItems(savedItems);
+  }, [storageKey]);
 
   const handleQuantityChange = (productId, value) => {
     let quantity = Number(value);
@@ -77,33 +28,33 @@ export default function OrderPage() {
     if (quantity < 1) quantity = 1;
     if (quantity > 5) quantity = 5;
 
-    const updatedItems = orderItems.map((item) =>
+    const updatedItems = cartItems.map((item) =>
       String(item.product.id) === String(productId)
         ? { ...item, quantity }
         : item
     );
 
-    setOrderItems(updatedItems);
+    setCartItems(updatedItems);
     localStorage.setItem(storageKey, JSON.stringify(updatedItems));
   };
 
   const handleRemoveProduct = (productId) => {
-    const updatedItems = orderItems.filter(
+    const updatedItems = cartItems.filter(
       (item) => String(item.product.id) !== String(productId)
     );
 
-    setOrderItems(updatedItems);
+    setCartItems(updatedItems);
     localStorage.setItem(storageKey, JSON.stringify(updatedItems));
   };
 
-  const totalPrice = orderItems.reduce((total, item) => {
+  const handleClearCart = () => {
+    setCartItems([]);
+    localStorage.removeItem(storageKey);
+  };
+
+  const totalPrice = cartItems.reduce((total, item) => {
     return total + item.product.price * item.quantity;
   }, 0);
-
-  const handleAddMoreProducts = () => {
-    localStorage.setItem(storageKey, JSON.stringify(orderItems));
-    navigate("/");
-  };
 
   const handleCheckout = async () => {
     if (!user) {
@@ -117,14 +68,14 @@ export default function OrderPage() {
       return;
     }
 
-    if (!orderItems.length) {
+    if (!cartItems.length) {
       alert("Please add at least one product");
       return;
     }
 
     const orderData = {
       userId: user.id,
-      items: orderItems.map((item) => ({
+      items: cartItems.map((item) => ({
         productId: item.product.id,
         product: item.product,
         quantity: item.quantity,
@@ -133,14 +84,16 @@ export default function OrderPage() {
       })),
       totalPrice,
       createdAt: new Date().toISOString(),
+      status: "Placed",
     };
 
     setSubmitting(true);
 
     const response = await createOrder(orderData);
 
+    setSubmitting(false);
+
     if (!response.success) {
-      setSubmitting(false);
       alert(response.message || "Unable to save order");
       return;
     }
@@ -149,13 +102,32 @@ export default function OrderPage() {
     navigate(`/checkout/${response.data.id}`);
   };
 
+  if (!cartItems.length) {
+    return (
+      <Box display="flex" justifyContent="center" p={4}>
+        <Paper elevation={4} sx={{ p: 4, width: 500, textAlign: "center" }}>
+          <ShoppingCartIcon color="primary" sx={{ fontSize: 50, mb: 2 }} />
+
+          <Typography variant="h5" fontWeight="bold" mb={2}>
+            Your cart is empty
+          </Typography>
+
+          <Button variant="contained" onClick={() => navigate("/")}>
+            Continue Shopping
+          </Button>
+        </Paper>
+      </Box>
+    );
+  }
+
   return (
     <Box display="flex" justifyContent="center" p={4}>
       <Paper elevation={4} sx={{ p: 4, borderRadius: 3, width: "900px" }}>
         <Box display="flex" alignItems="center" gap={1} mb={2}>
           <ShoppingCartIcon color="primary" />
+
           <Typography variant="h5" fontWeight="bold">
-            Order Summary
+            My Cart
           </Typography>
         </Box>
 
@@ -174,11 +146,12 @@ export default function OrderPage() {
           </TableHead>
 
           <TableBody>
-            {orderItems.map((item) => (
+            {cartItems.map((item) => (
               <TableRow key={item.product.id}>
                 <TableCell>{item.product.name}</TableCell>
                 <TableCell>{item.product.desc}</TableCell>
                 <TableCell>₹{item.product.price}</TableCell>
+
                 <TableCell>
                   <TextField
                     type="number"
@@ -191,7 +164,9 @@ export default function OrderPage() {
                     sx={{ width: 90 }}
                   />
                 </TableCell>
+
                 <TableCell>₹{item.product.price * item.quantity}</TableCell>
+
                 <TableCell>
                   <Button
                     color="error"
@@ -206,13 +181,17 @@ export default function OrderPage() {
           </TableBody>
         </Table>
 
-        <Box mt={3}>
+        <Box display="flex" gap={2} mt={3}>
           <Button
             variant="outlined"
             startIcon={<AddIcon />}
-            onClick={handleAddMoreProducts}
+            onClick={() => navigate("/")}
           >
             Add More Products
+          </Button>
+
+          <Button color="error" variant="outlined" onClick={handleClearCart}>
+            Clear Cart
           </Button>
         </Box>
 
@@ -223,6 +202,7 @@ export default function OrderPage() {
 
           <Box display="flex" alignItems="center">
             <CurrencyRupeeIcon color="primary" />
+
             <Typography variant="h6" fontWeight="bold">
               {totalPrice}
             </Typography>
@@ -233,7 +213,6 @@ export default function OrderPage() {
           variant="contained"
           fullWidth
           size="large"
-          startIcon={<AddShoppingCartIcon />}
           sx={{ mt: 3, borderRadius: 2 }}
           onClick={handleCheckout}
           disabled={submitting}

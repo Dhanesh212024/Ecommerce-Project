@@ -2,6 +2,7 @@ import { AppBar, Toolbar, Typography, Button, Box, Avatar, Menu, MenuItem, ListI
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardIcon from "@mui/icons-material/Dashboard";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
@@ -64,6 +65,10 @@ export default function Header() {
 
           {authenticated ? (
             <>
+            <Button color="inherit" startIcon={<ShoppingCartIcon />} onClick={() => navigate("/cart")}>
+                Cart
+              </Button>
+              
               <Avatar
                 sx={{ cursor: "pointer", bgcolor: "secondary.main" }}
                 onClick={handleMenuOpen}
@@ -121,7 +126,7 @@ export default function Header() {
               <Button color="inherit" onClick={() => navigate("/register")}>
                 Register
               </Button>
-            </>
+                </>
           )}
         </Box>
       </Toolbar>

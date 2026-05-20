@@ -8,7 +8,7 @@ import { ProductContext } from "../productcontext/productContext";
 export default function Dashboard() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const { authenticated } = useContext(AuthContext);
+  const { user, authenticated } = useContext(AuthContext);
   const { products, loading } = useContext(ProductContext);
 
   const filteredProducts = products.filter((product) => {
@@ -24,10 +24,37 @@ export default function Dashboard() {
   const handleBuy = (id) => {
     if (!authenticated) {
       navigate("/login", { replace: true });
-    } else {
-      navigate(`/order/${id}`);
+      return;
     }
+
+    const selectedProduct = products.find(
+      (product) => String(product.id) === String(id),
+    );
+
+    if (!selectedProduct) {
+      alert("Product not found");
+      return;
+    }
+
+    const storageKey = user ? `orderItems_${user.id}` : "orderItems_guest";
+    const savedItems = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+    const alreadyAdded = savedItems.some(
+      (item) => String(item.product.id) === String(selectedProduct.id),
+    );
+
+    const updatedItems = alreadyAdded
+      ? savedItems.map((item) =>
+          String(item.product.id) === String(selectedProduct.id)
+            ? { ...item, quantity: Math.min(item.quantity + 1, 5) }
+            : item,
+        )
+      : [...savedItems, { product: selectedProduct, quantity: 1 }];
+
+    localStorage.setItem(storageKey, JSON.stringify(updatedItems));
+    navigate("/cart");
   };
+
   if (loading) return <Typography>Loading products...</Typography>;
 
   return (

@@ -29,7 +29,7 @@ export default function Card({ name, desc, price, discount, image, onBuy }) {
           Add to Cart
           </Button> */}
           <Button variant="contained" fullWidth onClick={onBuy}>
-            ₹{price}
+            Add to Cart - ₹{price}
           </Button>
         </Box>
       </Box>
